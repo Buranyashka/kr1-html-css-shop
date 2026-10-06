@@ -74,6 +74,11 @@ footer {
   color: var(--color-text);
 }
 
+:target {
+  outline: 2px dashed var(--color-primary);
+  outline-offset: 4px;
+}
+
 /* ===============================
    3. Общие элементы интерфейса
    =============================== */
@@ -115,6 +120,10 @@ a:focus-visible {
 .button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* ===============================
@@ -162,7 +171,21 @@ a:focus-visible {
   background-color: var(--color-surface);
 }
 
+.breadcrumbs {
+  max-width: var(--container-width);
+  margin: 0 auto var(--space-md);
+  font-size: 14px;
+  color: var(--color-muted);
+}
 
+.breadcrumbs a {
+  color: var(--color-primary);
+}
+
+.breadcrumbs span::before {
+  content: " / ";
+  color: var(--color-muted);
+}
 
 /* ===============================
    5. Форма и модальное окно
