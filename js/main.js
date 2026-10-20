@@ -1,76 +1,88 @@
-// Получаем модальное окно по id.
+/* =========================================================
+   main.js
+   Совместим со всеми страницами проекта:
+   - index.html  — модальное окно и кнопки заказа в карточках
+   - order.html  — форма заявки на странице
+   - contacts.html — форма обратной связи
+   ========================================================= */
+
+/* ---------- 1. Модальное окно (есть только на index.html) ---------- */
 const orderDialog = document.getElementById('order-dialog');
-
-// Получаем все кнопки заказа в карточках товаров.
-const orderButtons = document.querySelectorAll('.product-card__button');
-
-// Получаем кнопку закрытия модального окна.
 const closeDialogButton = document.getElementById('close-order-dialog');
-
-// Получаем скрытое поле, в которое будет записан выбранный товар.
 const selectedProductInput = document.getElementById('selected-product');
 
-// Перебираем все кнопки «Заказать».
+// Открытие модального окна из карточек товара (если кнопки-<button> с data-product есть).
+const orderButtons = document.querySelectorAll('.product-card__button[data-product]');
+
 orderButtons.forEach((button) => {
-  button.addEventListener('click', () => {
-    // Получаем название товара из data-атрибута.
+  button.addEventListener('click', (event) => {
+    if (!orderDialog) return; // если модалки нет — не вмешиваемся
+    event.preventDefault();
+
     const productName = button.dataset.product;
+    if (selectedProductInput) {
+      selectedProductInput.value = productName;
+    }
 
-    // Записываем название товара в скрытое поле формы.
-    selectedProductInput.value = productName;
-
-    // Открываем модальное окно.
     orderDialog.showModal();
   });
 });
 
-// Закрываем модальное окно по кнопке «Закрыть».
-closeDialogButton.addEventListener('click', () => {
-  orderDialog.close();
-});
-
-
-
-// Получаем форму заявки.
-const orderForm = document.getElementById('order-form');
-
-// Получаем сообщение об успешной отправке.
-const successMessage = document.getElementById('success-message');
-
-// Обрабатываем отправку формы.
-orderForm.addEventListener('submit', (event) => {
-  // Отменяем стандартную отправку формы,
-  // потому что backend пока не подключён.
-  event.preventDefault();
-
-  // Сбрасываем предыдущие признаки ошибок.
-  const formElements = Array.from(orderForm.elements);
-
-  formElements.forEach((element) => {
-    if (element.willValidate) {
-      element.removeAttribute('aria-invalid');
-    }
+if (closeDialogButton && orderDialog) {
+  closeDialogButton.addEventListener('click', () => {
+    orderDialog.close();
   });
+}
 
-  // Проверяем встроенные HTML-ограничения формы.
-  if (!orderForm.checkValidity()) {
+/* ---------- 2. Универсальная обработка форм ---------- */
+function setupForm(formId, successMessageId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+
+  const successMessage = successMessageId
+    ? document.getElementById(successMessageId)
+    : null;
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const formElements = Array.from(form.elements);
+
     formElements.forEach((element) => {
-      if (element.willValidate && !element.checkValidity()) {
-        element.setAttribute('aria-invalid', 'true');
+      if (element.willValidate) {
+        element.removeAttribute('aria-invalid');
       }
     });
 
-    // Показываем стандартные сообщения браузера.
-    orderForm.reportValidity();
-    return;
-  }
+    if (!form.checkValidity()) {
+      formElements.forEach((element) => {
+        if (element.willValidate && !element.checkValidity()) {
+          element.setAttribute('aria-invalid', 'true');
+        }
+      });
 
-  // Показываем сообщение об успешной отправке.
-  successMessage.hidden = false;
+      form.reportValidity();
+      return;
+    }
 
-  // Очищаем форму.
-  orderForm.reset();
+    if (successMessage) {
+      successMessage.hidden = false;
+      successMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-  // Закрываем модальное окно.
-  orderDialog.close();
-});
+    form.reset();
+
+    if (orderDialog && orderDialog.open) {
+      orderDialog.close();
+    }
+  });
+}
+
+// Модальная форма на index.html
+setupForm('order-form', 'success-message');
+
+// Форма на order.html
+setupForm('order-page-form', 'order-page-success');
+
+// Форма на contacts.html (создадим на шаге 3)
+setupForm('contacts-form', 'contacts-success');
